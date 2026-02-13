@@ -1,5 +1,4 @@
---------------------------------------------------------------------------------------------------------------------------------
-    ==== M5-Stack Core Basic - Bluetooth Hat-TRACKER-MOUSE (HAT-MOUSE) - with the ICM-20948 IMU Sensor with DMP support ====
+  M5-Stack Core Basic - Bluetooth Hat-TRACKER-MOUSE (HAT-MOUSE) - with the ICM-20948 IMU Sensor with DMP support ====
   --------------------------------------------------------------------------------------------------------------------------------
   Hardware: ESP32: M5Stack Core Basic & Sensor: ICM-20948 (on sparkfun breakout board) - Quat9(Gyro+Acc+Mag) => X and Y will be sent out
   Project descripton: A simple wireless Hat-Tracker-Device (MOUSE version) for BluetoothLE to be attatched on your head to control
@@ -13,12 +12,16 @@
   You can turn-off the device by long pressing [A] or with the integrated M5-PowerButton or whait 6min with BT-connection off.
   The sensor technically takes up 10-30sek to warm and stop drifting, escpecially when its not facing a default position like vertical.
   											    @by frittna - 2.Feb 2026 Arduino IDE 1.8.19
+.
+.
+.
+.
 
+.
+.
+.
+  OPTIONAL VERSION (ITS THE SAME BUT)
 
-
-
-  OPTIONAL - ITS THE SAME BUT:
-  
   Bluetooth Hat-TRACKER-MOUSE (HAT-MOUSE) - with the ICM-20948 IMU Sensor with DMP support ====
   --------------------------------------------------------------------------------------------------------------------------------
   Hardware: ESP32: M5Stack Core Basic & Sensor: ICM-20948 (on sparkfun breakout board) - Quat9(Gyro+Acc+Mag) => X and Y will be sent out
@@ -33,4 +36,5 @@
   You can turn-off the device by long pressing [A] or with the integrated M5-PowerButton or whait 6min with BT-connection off.
   The sensor technically takes up 10-30sek to warm and stop drifting, escpecially when its not facing a default position like vertical.
   											    @by frittna - 2.Feb 2026 Arduino IDE 1.8.19
+
 
