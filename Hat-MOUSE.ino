@@ -46,7 +46,7 @@ BleMouse bleMouse("M5STACK HAT-MOUSE", "M5Stack", 100);
 Preferences prefs;
 
 // Input-Konfiguration
-int sensitivity = 152; //sets the overall movement speed multiplier - 152 is perfect for me (180°view)
+int sensitivity = 100; //sets the overall movement speed multiplier - 152 is perfect for me (180°view)
 float precisionFactor = 0.65; // if precisionActive, reduces movement speed, done by a multiplier
 float tilt = 0.75; // // closer to 1 will tilt sooner
 bool precisionActive = false; //nicht mehr In Verwendung, um Taste A freizubekommen (A spinnt)
@@ -158,7 +158,7 @@ void refreshUI() {
     M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setTextColor(RED, BLACK);
-    M5.Lcd.print("  TILT-LOCKED");
+    M5.Lcd.print("  VIEW-LOCKED");
   }
   if (!isWarmingUp) {
     M5.Lcd.setCursor(0, 165);
@@ -466,7 +466,8 @@ void loop() {
       while (M5.BtnC.isPressed()) {
         M5.update();
       }
-    } else if (M5.BtnB.wasPressed()) {
+    }
+    if (M5.BtnB.wasPressed()) {
       hold_LeftMBTN_Active = !hold_LeftMBTN_Active;
       if (is_LeftMBTN_pressed_now) {
         bleMouse.press(MOUSE_LEFT);
@@ -483,7 +484,8 @@ void loop() {
       //      precisionActive = !precisionActive;
       //      lastActivity = now;
       //      refreshUI();
-    } else if (M5.BtnC.wasPressed()) {
+    }
+    if (M5.BtnC.wasPressed()) {
       tiltLockActive = !tiltLockActive;
       lastActivity = now;
       refreshUI();
@@ -588,8 +590,8 @@ void loop() {
           int moveY = (abs(moveY_raw) > tilt) ? (int)round(moveY_raw) : 0;
 
           // X und Y Achse invertieren falls invert-Flag gesetzt ist
-          sentX = invertXAxis ? - moveX : moveX;
-          sentY = invertYAxis ? - moveY : moveY;
+          sentX = invertXAxis ? -moveX : moveX;
+          sentY = invertYAxis ? -moveY : moveY;
 
           // debug ausgabe
           if (debug) {
@@ -601,7 +603,6 @@ void loop() {
             }
           }
         }
-
 
         // Wenn TiltLockActive UND ExcessiveTilt ODER is_LeftMBTN_pressed_now, nimm die letzen Werte (für Maus: sende 0,0 Bewegung)
         if ((tiltLockActive && excessiveTilt) || is_LeftMBTN_pressed_now) {
@@ -622,7 +623,7 @@ void loop() {
               M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 3);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(RED, BLACK);
-              M5.Lcd.print("  TILT-LOCKED");
+              M5.Lcd.print("  VIEW-LOCKED");
               prevBottomState = 1;
               prevBottomX = 0;
               prevBottomY = 0;
@@ -633,7 +634,8 @@ void loop() {
               M5.Lcd.setCursor(BOTTOM_X + 25, BOTTOM_Y + 3);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(btConnected ? GREEN : WHITE, BLACK);
-              M5.Lcd.printf("X:%3d Y:%3d", sentX, sentY);
+              M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
+              M5.Lcd.printf("X:%3d Y:%3d", sentX, -sentY); //warum hier ein - sein muss damit es stimmt weiß ich auch nicht
               prevBottomState = 0;
               prevBottomX = sentX;
               prevBottomY = sentY;
