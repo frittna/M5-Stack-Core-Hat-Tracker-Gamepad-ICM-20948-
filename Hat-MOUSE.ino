@@ -157,8 +157,8 @@ void refreshUI() {
     M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
     M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
     M5.Lcd.setTextSize(2);
-    M5.Lcd.setTextColor(YELLOW, BLACK);
-    M5.Lcd.print("    => LOCKED <=");
+    M5.Lcd.setTextColor(RED, BLACK);
+    M5.Lcd.print("  TILT-LOCKED");
   }
   if (!isWarmingUp) {
     M5.Lcd.setCursor(0, 165);
@@ -470,11 +470,11 @@ void loop() {
       hold_LeftMBTN_Active = !hold_LeftMBTN_Active;
       if (is_LeftMBTN_pressed_now) {
         bleMouse.press(MOUSE_LEFT);
-        M5.Lcd.fillCircle(BOTTOM_W, 226, 8, YELLOW); // gelber kreis für Linke_Maustaste ist gedrückt
+        M5.Lcd.fillCircle(BOTTOM_W + 12, 226, 8, YELLOW); // gelber kreis für Linke_Maustaste ist gedrückt
         is_LeftMBTN_pressed_now = true;
       } else {
         bleMouse.release(MOUSE_LEFT);
-        M5.Lcd.fillCircle(BOTTOM_W, 226, 8, BLACK); // löscht kreis wieder
+        M5.Lcd.fillCircle(BOTTOM_W + 12, 226, 8, BLACK); // löscht kreis wieder
         is_LeftMBTN_pressed_now = false;
       }
       lastActivity = now;
@@ -566,8 +566,8 @@ void loop() {
           prevBottomY = 0;
 
           refreshUI();
-          calOffsetX = q3;
-          calOffsetY = q2;
+          calOffsetX = q2;
+          calOffsetY = q3;
         }
         //}
         //}
@@ -581,8 +581,8 @@ void loop() {
         if (!tiltLockActive || !excessiveTilt) {
           float currentMultiplier = precisionActive ? (sensitivity * precisionFactor) : (float)sensitivity;
 
-          float moveX_raw = (q3 - calOffsetX) * currentMultiplier * -1;
-          float moveY_raw = (q2 - calOffsetY) * currentMultiplier * -1;  //nach q2 das entfernt: - driftOffsetY
+          float moveX_raw = (q2 - calOffsetX) * currentMultiplier * -1;
+          float moveY_raw = (q3 - calOffsetY) * currentMultiplier * -1;  //nach q3(maus) das entfernt: - driftOffsetY
 
           int moveX = (abs(moveX_raw) > tilt) ? (int)round(moveX_raw) : 0;
           int moveY = (abs(moveY_raw) > tilt) ? (int)round(moveY_raw) : 0;
@@ -619,10 +619,10 @@ void loop() {
           if (excessiveTilt && tiltLockActive) {
             if (prevBottomState != 1) {
               M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
-              M5.Lcd.setCursor(BOTTOM_X + 5, BOTTOM_Y + 3);
+              M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 3);
               M5.Lcd.setTextSize(2);
-              M5.Lcd.setTextColor(YELLOW, BLACK);
-              M5.Lcd.print(" => LOCKED <=");
+              M5.Lcd.setTextColor(RED, BLACK);
+              M5.Lcd.print("  TILT-LOCKED");
               prevBottomState = 1;
               prevBottomX = 0;
               prevBottomY = 0;
