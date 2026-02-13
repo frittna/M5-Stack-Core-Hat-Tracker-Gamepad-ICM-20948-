@@ -118,6 +118,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 <sup>ToDo's: At the Moment no storing of gyro bias values is made for the next boot because the DMP is doing it's thing correctly but is just not accepting nor will he tell me its Accel and CPass values so that i can store them. maybe i will add it later.</sup> 
 
 ---
+---
+---
 
-![](jpg/Hat-MOUSE_logo.jpg)
 
