@@ -46,7 +46,7 @@ BleMouse bleMouse("M5STACK HAT-MOUSE", "M5Stack", 100);
 Preferences prefs;
 
 // Input-Konfiguration
-int sensitivity = 100; //sets the overall movement speed multiplier - 152 is perfect for me (180°view)
+int sensitivity = 100; 
 float precisionFactor = 0.65; // if precisionActive, reduces movement speed, done by a multiplier
 float tilt = 0.75; // // closer to 1 will tilt sooner
 bool precisionActive = false; //nicht mehr In Verwendung, um Taste A freizubekommen (A spinnt)
@@ -157,7 +157,7 @@ void refreshUI() {
   M5.Lcd.setCursor(0, 105); //135
   M5.Lcd.setTextColor(tiltLockActive ? WHITE : TFT_CYAN );
   M5.Lcd.printf("Tilt-Lock Mode   [C]: %s", tiltLockActive ? "ON " : "OFF");
-  if ((tiltLockActive && excessiveTilt) || is_LeftMBTN_pressed_now) {
+  if (tiltLockActive && excessiveTilt) {
     M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
     M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
     M5.Lcd.setTextSize(2);
@@ -471,7 +471,7 @@ void loop() {
       prevScreenOffSec = -1;
       refreshUI();
       startCalibrationProcess();
-    } else if (M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) {  //M5.BtnA.wasPressed() ||
+    } else if (M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) {  //M5.BtnA.wasPressed() ||      
       M5.Lcd.wakeup();
       M5.Lcd.setBrightness(lcd_brightn);
       displayOn = true;
@@ -483,6 +483,7 @@ void loop() {
     // 2. Button A/B/C + long & short press handling
     if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
       it_is_a_QuickReset = true;
+      tiltLockActive = !tiltLockActive;
       refreshUI();
       startCalibrationProcess();
       while (M5.BtnC.isPressed()) {
@@ -621,8 +622,8 @@ void loop() {
           }
         }
 
-        // Wenn TiltLockActive UND ExcessiveTilt ODER is_LeftMBTN_pressed_now, nimm die letzen Werte (für Maus: sende 0,0 Bewegung)
-        if ((tiltLockActive && excessiveTilt) || is_LeftMBTN_pressed_now) {
+        // Wenn TiltLockActive UND ExcessiveTilt, nimm die letzen Werte (für Maus: sende 0,0 Bewegung)
+        if (tiltLockActive && excessiveTilt) {
           sentX = 0;
           sentY = 0;
         }
