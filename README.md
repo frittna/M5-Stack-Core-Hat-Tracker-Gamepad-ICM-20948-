@@ -1,3 +1,5 @@
+![](jpg/Hat-GAMEPAD_logo.jpg)
+
 # M5-Stack Core Basic - Bluetooth Hat-TRACKER-GAMEPAD (HAT-GAMEPAD)
 ### Featuring the ICM-20948 IMU Sensor with DMP support
 
@@ -58,13 +60,11 @@ To use this with your simulation software, you can use:
 
 <sup>ToDo's: At the Moment no storing of gyro bias values is made for the next boot because the DMP is doing it's thing correctly but is just not accepting nor will he tell me its Accel and CPass values so that i can store them. maybe i will add it later.</sup> 
 
-
-![](jpg/Hat-GAMEPAD_logo.jpg)
-
+---
+---
 ---
 
-
----
+![](jpg/Hat-MOUSE_logo.jpg)
 
 # M5-Stack Core Basic - Bluetooth Hat-TRACKER-MOUSE (HAT-MOUSE)
 ### Featuring the ICM-20948 IMU Sensor with DMP support
@@ -120,3 +120,4 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 ---
 
 ![](jpg/Hat-MOUSE_logo.jpg)
+
