@@ -99,12 +99,16 @@ bool prevZeroSent = false;
 // Layout constants
 const int BOTTOM_X =    0;
 const int BOTTOM_Y =  216;
-const int BOTTOM_W =  240;
+const int BOTTOM_W =  200;
 const int BOTTOM_H =   32;
-const int BATTERY_X = 240;
+const int MOUSE_SYM_X =  202;
+const int MOUSE_SYM_Y =  218;
+const int BATTERY_X = 250;
 const int BATTERY_Y = 216;
-const int BATTERY_W =  60;
+const int BATTERY_W =  70;
 const int BATTERY_H =  32;
+
+
 
 // Variablen für LED Status-Blinken
 unsigned long lastLedToggle = 0;
@@ -124,9 +128,9 @@ void drawBattery() {
   M5.Lcd.setTextSize(2);
   M5.Lcd.setTextColor(WHITE, BLACK);
   M5.Lcd.fillRect(BATTERY_X, BATTERY_Y, BATTERY_W, BATTERY_H, BLACK);
-  M5.Lcd.setCursor(BATTERY_X + 8, 219);
+  M5.Lcd.setCursor(BATTERY_X, BATTERY_Y + 5);
   M5.Lcd.printf("%3d%%", level);  // für Batterieanzeige zb "100%", rechtsbündig
-  M5.Lcd.fillCircle(BATTERY_X + 71 , 226, 8, color); // grüner bis roter false der batteriespannungs
+  M5.Lcd.fillCircle(BATTERY_X + 59 , BATTERY_Y + 12, 8, color); // grüner bis roter false der batteriespannungs
 }
 
 // REFRESH UI---
@@ -171,6 +175,13 @@ void refreshUI() {
     M5.Lcd.setTextColor(WHITE);
     M5.Lcd.println(" * WAIT FOR CALIBRATION *");
   }
+  // L-MBTN is pressed Mausgrafik
+  // Hauptkörper 16px breit, 20px hoch
+  M5.Lcd.drawRoundRect(MOUSE_SYM_X, MOUSE_SYM_Y, 16, 20, 4, TFT_WHITE);
+  // Die Trennlinie in der Mitte (vertikal)
+  M5.Lcd.drawFastVLine(MOUSE_SYM_X + 8, MOUSE_SYM_Y, 8, TFT_WHITE);
+  // Die horizontale Trennung zwischen Tasten und Handfläche
+  M5.Lcd.drawFastHLine(MOUSE_SYM_X, MOUSE_SYM_Y + 8, 16, TFT_WHITE);
   drawBattery();
 }
 
@@ -436,6 +447,18 @@ void loop() {
     }
   }
 
+  // Kleiner MAUS-Punkt und gedrückte Tasten-Grafik wenn aktiv oder nicht
+  if (is_LeftMBTN_pressed_now && displayOn) {
+    bleMouse.press(MOUSE_LEFT);
+    // LINKE MAUSTASTE (GEDRÜCKT)
+    // Wir füllen die linke obere Seite dunkel aus
+    M5.Lcd.fillRect(MOUSE_SYM_X + 1, MOUSE_SYM_Y + 1, 7, 7, TFT_DARKGREY);
+    M5.Lcd.fillCircle(MOUSE_SYM_X + 30, MOUSE_SYM_Y + 10, 8, YELLOW); // gelber kreis für Linke_Maustaste ist gedrückt
+  } else {
+    bleMouse.release(MOUSE_LEFT);
+    M5.Lcd.fillCircle(MOUSE_SYM_X + 30, MOUSE_SYM_Y + 10 , 8, BLACK); // löscht kreis wieder
+  }
+
   // 1. Button-wake & Quick Reset logic
   if (!displayOn) {
     if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
@@ -460,7 +483,6 @@ void loop() {
     // 2. Button A/B/C + long & short press handling
     if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
       it_is_a_QuickReset = true;
-      hold_LeftMBTN_Active = !hold_LeftMBTN_Active; // toggelt hold_LeftMBTN_Active wenn lange re-calib gedrückt wurde weil selber button benutzt wird
       refreshUI();
       startCalibrationProcess();
       while (M5.BtnC.isPressed()) {
@@ -468,22 +490,17 @@ void loop() {
       }
     }
     if (M5.BtnB.wasPressed()) {
-      hold_LeftMBTN_Active = !hold_LeftMBTN_Active;
-      if (is_LeftMBTN_pressed_now) {
-        bleMouse.press(MOUSE_LEFT);
-        M5.Lcd.fillCircle(BOTTOM_W + 12, 226, 8, YELLOW); // gelber kreis für Linke_Maustaste ist gedrückt
+      hold_LeftMBTN_Active = !hold_LeftMBTN_Active; // toggelt hold_LeftMBTN_Active wenn lange re-calib gedrückt wurde weil selber button benutzt wird
+      if (hold_LeftMBTN_Active) {
         is_LeftMBTN_pressed_now = true;
-      } else {
-        bleMouse.release(MOUSE_LEFT);
-        M5.Lcd.fillCircle(BOTTOM_W + 12, 226, 8, BLACK); // löscht kreis wieder
-        is_LeftMBTN_pressed_now = false;
-      }
+      } else is_LeftMBTN_pressed_now = false;
       lastActivity = now;
       refreshUI();
-      //    } else if (M5.BtnB.wasPressed()) {
+      //      if (M5.BtnB.wasPressed()) {
       //      precisionActive = !precisionActive;
       //      lastActivity = now;
       //      refreshUI();
+      //}
     }
     if (M5.BtnC.wasPressed()) {
       tiltLockActive = !tiltLockActive;
@@ -620,7 +637,7 @@ void loop() {
           if (excessiveTilt && tiltLockActive) {
             if (prevBottomState != 1) {
               M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
-              M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 3);
+              M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(RED, BLACK);
               M5.Lcd.print("  TILT-LOCKED");
@@ -630,7 +647,7 @@ void loop() {
             }
           } else {
             if (prevBottomState != 0 || prevBottomX != sentX || prevBottomY != sentY) {
-              // Anzeige X: Y: Z: auf dem Display
+              // Anzeige X: Y: auf dem Display
               M5.Lcd.setCursor(BOTTOM_X + 25, BOTTOM_Y + 3);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(btConnected ? GREEN : WHITE, BLACK);
