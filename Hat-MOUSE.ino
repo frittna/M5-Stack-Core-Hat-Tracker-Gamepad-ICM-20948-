@@ -158,7 +158,7 @@ void refreshUI() {
     M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setTextColor(RED, BLACK);
-    M5.Lcd.print("  VIEW-LOCKED");
+    M5.Lcd.print("  TILT-LOCKED");
   }
   if (!isWarmingUp) {
     M5.Lcd.setCursor(0, 165);
@@ -623,7 +623,7 @@ void loop() {
               M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 3);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(RED, BLACK);
-              M5.Lcd.print("  VIEW-LOCKED");
+              M5.Lcd.print("  TILT-LOCKED");
               prevBottomState = 1;
               prevBottomX = 0;
               prevBottomY = 0;
