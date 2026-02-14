@@ -13,7 +13,7 @@
   Menu-Buttons for: [B]=lock-in LeftMouseButton, [C]=toggle Tilt-Lock, long-press[C]=re-center sensor
   You can turn-off the device by long pressing [A] or with the integrated M5-PowerButton or whait 6min with BT-connection off.
   The sensor technically takes up 10-30sek to warm and stop drifting, escpecially when its not facing a default position like vertical.
-  											    @by frittna - 2.Feb 2026 Arduino IDE 1.8.19
+                            @by frittna - 2.Feb 2026 Arduino IDE 1.8.19
                                                         BUG: kein speichen mehr der gyro-bias werte, wieder alles rausgenommen, trotz
                                                         speichern und auslesen/setzen bringt es keine verbesserung und er nimmt
                                                         außer actual.Gyro nix an? actual.Accel und .CPass Werte liefern immer 0!?
@@ -46,7 +46,7 @@ BleMouse bleMouse("M5STACK HAT-MOUSE", "M5Stack", 100);
 Preferences prefs;
 
 // Input-Konfiguration
-int sensitivity = 100; 
+int sensitivity = 100;
 float precisionFactor = 0.65; // if precisionActive, reduces movement speed, done by a multiplier
 float tilt = 0.75; // // closer to 1 will tilt sooner
 bool precisionActive = false; //nicht mehr In Verwendung, um Taste A freizubekommen (A spinnt)
@@ -182,6 +182,18 @@ void refreshUI() {
   M5.Lcd.drawFastVLine(MOUSE_SYM_X + 8, MOUSE_SYM_Y, 8, TFT_WHITE);
   // Die horizontale Trennung zwischen Tasten und Handfläche
   M5.Lcd.drawFastHLine(MOUSE_SYM_X, MOUSE_SYM_Y + 8, 16, TFT_WHITE);
+  // MAUS-Punkt zeichnen wenn aktiv oder nicht
+  if (is_LeftMBTN_pressed_now && displayOn) {
+    bleMouse.press(MOUSE_LEFT);
+    // LINKE MAUSTASTE (GEDRÜCKT)
+    // Wir füllen die linke obere Seite dunkel aus
+    M5.Lcd.fillRect(MOUSE_SYM_X + 1, MOUSE_SYM_Y + 1, 7, 7, TFT_DARKGREY);
+    M5.Lcd.fillCircle(MOUSE_SYM_X + 30, MOUSE_SYM_Y + 10, 8, YELLOW); // gelber kreis für Linke_Maustaste ist gedrückt
+  } else {
+    bleMouse.release(MOUSE_LEFT);
+    M5.Lcd.fillCircle(MOUSE_SYM_X + 30, MOUSE_SYM_Y + 10 , 8, BLACK); // löscht kreis wieder
+  }
+  
   drawBattery();
 }
 
@@ -373,12 +385,10 @@ void loop() {
     LEDbar.setPixelColor(9, LEDbar.Color(255, 0, 0)); // Rot
     LEDbar.show();    //faded
     for (int i = lcd_brightn; i > 0 ; i--) {
-      lcd_brightn -= 1;
       M5.lcd.setBrightness(lcd_brightn);
       delay(20);
     }
     for (int i = led_brightness; i > 0 ; i--) {
-      led_brightness -= 1;
       LEDbar.setBrightness(led_brightness);
       delay(30);
       LEDbar.show();
@@ -447,18 +457,6 @@ void loop() {
     }
   }
 
-  // Kleiner MAUS-Punkt und gedrückte Tasten-Grafik wenn aktiv oder nicht
-  if (is_LeftMBTN_pressed_now && displayOn) {
-    bleMouse.press(MOUSE_LEFT);
-    // LINKE MAUSTASTE (GEDRÜCKT)
-    // Wir füllen die linke obere Seite dunkel aus
-    M5.Lcd.fillRect(MOUSE_SYM_X + 1, MOUSE_SYM_Y + 1, 7, 7, TFT_DARKGREY);
-    M5.Lcd.fillCircle(MOUSE_SYM_X + 30, MOUSE_SYM_Y + 10, 8, YELLOW); // gelber kreis für Linke_Maustaste ist gedrückt
-  } else {
-    bleMouse.release(MOUSE_LEFT);
-    M5.Lcd.fillCircle(MOUSE_SYM_X + 30, MOUSE_SYM_Y + 10 , 8, BLACK); // löscht kreis wieder
-  }
-
   // 1. Button-wake & Quick Reset logic
   if (!displayOn) {
     if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
@@ -471,7 +469,7 @@ void loop() {
       prevScreenOffSec = -1;
       refreshUI();
       startCalibrationProcess();
-    } else if (M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) {  //M5.BtnA.wasPressed() ||      
+    } else if (M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) {  //M5.BtnA.wasPressed() ||
       M5.Lcd.wakeup();
       M5.Lcd.setBrightness(lcd_brightn);
       displayOn = true;
@@ -479,35 +477,33 @@ void loop() {
       prevScreenOffSec = -1;
       refreshUI();
     }
-  } else {
+  } else {    
     // 2. Button A/B/C + long & short press handling
     if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
       it_is_a_QuickReset = true;
-      tiltLockActive = !tiltLockActive;
+      tiltLockActive = !tiltLockActive;  // toggelt hold_LeftMBTN_Active wenn lange re-calib gedrückt wurde weil selber button benutzt wird
       refreshUI();
       startCalibrationProcess();
       while (M5.BtnC.isPressed()) {
         M5.update();
       }
-    }
-    if (M5.BtnB.wasPressed()) {
-      hold_LeftMBTN_Active = !hold_LeftMBTN_Active; // toggelt hold_LeftMBTN_Active wenn lange re-calib gedrückt wurde weil selber button benutzt wird
+    } else if (M5.BtnB.wasPressed()) {
+      hold_LeftMBTN_Active = !hold_LeftMBTN_Active;
       if (hold_LeftMBTN_Active) {
         is_LeftMBTN_pressed_now = true;
       } else is_LeftMBTN_pressed_now = false;
       lastActivity = now;
       refreshUI();
-      //      if (M5.BtnB.wasPressed()) {
-      //      precisionActive = !precisionActive;
-      //      lastActivity = now;
-      //      refreshUI();
-      //}
-    }
-    if (M5.BtnC.wasPressed()) {
+    } else if (M5.BtnC.wasPressed()) {
       tiltLockActive = !tiltLockActive;
       lastActivity = now;
       refreshUI();
     }
+    //else if (M5.BtnB.wasPressed()) {
+    //      precisionActive = !precisionActive;
+    //      lastActivity = now;
+    //      refreshUI();
+    //}
   }
 
   // 3. Display Auto-Off
@@ -561,7 +557,7 @@ void loop() {
       double q3 = ((double)data.Quat9.Data.Q2) / 1073741824.0; // getauscht Data.Q2 = meine X-Maus Achse
       double q0 = sqrt(1.0 - ((q1 * q1) + (q2 * q2) + (q3 * q3)));
       if (isWarmingUp) {  //"wenn kalibriert wird und daten kommen"
-        if (now - calibrationTime >= WARM_UP_TIME) {  //"wenn kalibrierung abläuft"
+        if (now - calibrationTime >= WARM_UP_TIME) {  // "Wenn Daten kommen und Warm-Up abläuft dann .."
           //if (startupSamples < CALIBRATION_SAMPLES) {
           //  driftOffsetY += q2;
           //  startupSamples++;
@@ -577,7 +573,7 @@ void loop() {
           //            M5.Lcd.printf("X:%3d Y:%3d", 0, 0);
           //          }
           // Sende Mittelposition
-          if (!prevZeroSent) {
+          if (!prevZeroSent && bleMouse.isConnected()) {
             bleMouse.move(0, 0);
             prevZeroSent = true;
           }
@@ -592,7 +588,7 @@ void loop() {
         //}
         //}
       } else {  //"wenn nicht kalibriert wird und die daten kommen"
-        // Maus Achsen-Logik für Werte zwischen -100 bis +100
+        // Maus Achsen-Logik
         excessiveTilt = (q0 < tilt);
 
         int sentX = 0;
@@ -652,8 +648,7 @@ void loop() {
               M5.Lcd.setCursor(BOTTOM_X + 25, BOTTOM_Y + 3);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(btConnected ? GREEN : WHITE, BLACK);
-              M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
-              M5.Lcd.printf("X:%3d Y:%3d", sentX, -sentY); //warum hier ein - sein muss damit es stimmt weiß ich auch nicht
+              M5.Lcd.printf("X:%3d Y:%3d", sentX, -sentY); //warum hier bei y ein - sein muss damit es stimmt weiß ich auch nicht
               prevBottomState = 0;
               prevBottomX = sentX;
               prevBottomY = sentY;
