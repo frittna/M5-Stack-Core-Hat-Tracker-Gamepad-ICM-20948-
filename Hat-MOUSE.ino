@@ -214,8 +214,6 @@ void startCalibrationProcess() {
   prevBottomX = 99999;
   prevBottomY = 99999;
 
-  myICM.resetDMP();   // Chip auf neuen Nullpunkt setzen
-  myICM.resetFIFO();  // Puffer leeren
   //  if (displayOn) {
   //    M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
   //    M5.Lcd.setCursor(BOTTOM_X + 25, BOTTOM_Y + 3);
