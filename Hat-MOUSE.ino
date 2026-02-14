@@ -26,7 +26,7 @@ bool debug = false;  // DEBUG SERIAL OUTPUT OFF
 
 //IMPORTANT on the old M5STACK CORE and Ardiono 1.8 (not 2.0): Boardmanager "espressif systems - eps32" -> version "2.0.17" (!)
 //                                                             Menu->Tools->Board-> "ESP32 Arduino" -> "M5-Stack-Core-ESP32"
-
+//                                                             Select a lager Partition Scheme if you run out mem on compiling
 // included Libraries
 #include <M5Stack.h>
 #include <esp_system.h> // Notwendig für MAC-Adressen um konfikte mit Gamepad-Version zu vermeiden
