@@ -27,6 +27,7 @@ bool debug = false;  // DEBUG SERIAL OUTPUT OFF
 //IMPORTANT on the old M5STACK CORE and Ardiono 1.8 (not 2.0): Boardmanager "espressif systems - eps32" -> version "2.0.17" (!)
 //                                                             Menu->Tools->Board-> "ESP32 Arduino" -> "M5-Stack-Core-ESP32"
 //                                                             Select a lager Partition Scheme if you run out mem on compiling
+
 // included Libraries
 #include <M5Stack.h>
 #include <esp_system.h> // Notwendig für MAC-Adressen um konfikte mit Gamepad-Version zu vermeiden
@@ -209,6 +210,9 @@ void startCalibrationProcess() {
     calOffsetX = ((double)data.Quat9.Data.Q2) / 1073741824.0; // getauscht - Data.Q2=meine X-Maus Achse
     calOffsetY = ((double)data.Quat9.Data.Q3) / 1073741824.0; // getauscht - Data.Q3=meine Y-Maus Achse
   }
+
+  myICM.resetDMP();
+  myICM.resetFIFO();
 
   prevZeroSent = false;
   prevBottomX = 99999;
