@@ -168,7 +168,7 @@ void refreshUI() {
     M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setTextColor(YELLOW, BLACK);
-    M5.Lcd.print("    => LOCKED <=");
+    M5.Lcd.print("  => LOCKED <=");
   }
   if (!isWarmingUp) {
     M5.Lcd.setCursor(0, 165);
@@ -202,8 +202,6 @@ void startCalibrationProcess() {
   prevBottomY = 99999;
   prevBottomZ = 99999;
 
-  myICM.resetDMP();   // Chip auf neuen Nullpunkt setzen
-  myICM.resetFIFO();  // Puffer leeren
   //  if (displayOn) {
   //    M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
   //    M5.Lcd.setCursor(BOTTOM_X + 5, BOTTOM_Y + 3);
@@ -605,7 +603,7 @@ void loop() {
           float currentMultiplier = precisionActive ? (sensitivity * precissionFactor) : (float)sensitivity;
 
           float moveX_raw = (q3 - calOffsetX) * currentMultiplier;
-          float moveY_raw = (q2 - calOffsetY) * currentMultiplier;  //nach q2 das entfernt: - driftOffsetY
+          float moveY_raw = (q2 - calOffsetY) * currentMultiplier;  //nach q2 (gamepad) das entfernt: - driftOffsetY
           float moveZ_raw = (q1 - calOffsetZ) * currentMultiplier;
 
           int16_t rawX_offset = (int16_t)(moveX_raw * sensitivity);
@@ -634,7 +632,7 @@ void loop() {
         int16_t finalY = invertYAxis ? (GAMEPAD_AXIS_MAX - sentY) : sentY;
         int16_t finalZ = invertZAxis ? (GAMEPAD_AXIS_MAX - sentZ) : sentZ;
 
-        // Wenn TiltLockActive und ExcessiveTilt oder holdPositonActive, nimm die letzen Werte
+        // Wenn TiltLockActive UND ExcessiveTilt ODER holdPositonActive, nimm die letzen Werte
         if ((tiltLockActive && excessiveTilt) || holdPositonActive) {
           finalX = prevBottomX;
           finalY = prevBottomY;
@@ -656,7 +654,7 @@ void loop() {
               M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
               M5.Lcd.setTextSize(2);
               M5.Lcd.setTextColor(YELLOW, BLACK);
-              M5.Lcd.print("    => LOCKED <=");
+              M5.Lcd.print("  => LOCKED <=");
               prevBottomState = 1;
               prevBottomX = 0;
               prevBottomY = 0;
