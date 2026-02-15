@@ -15,16 +15,16 @@
   You can turn-off the device by long pressing [A] or with the integrated M5-PowerButton or whait 6min with BT-connection off.
   The sensor technically takes up 5-30sek to warm-up and stop drifting, escpecially when its not facing a default position like vertical.
   Use (for example) OpenTrack and map the Joystick as Input and FreeTrack2.0/TrackIR as Output Protocoll for you SIM - depends on your setup.
-                                                                                        
-                                                                                          @by frittna - 2.Feb 2026 Arduino IDE 1.8.19
+
+                                                                                  @by frittna - v1.1 - 14.Feb 2026 Arduino IDE 1.8.19
                                                         BUG: kein speichen mehr der gyro-bias werte, wieder alles rausgenommen, trotz
-                                                        speichern und auslesen/setzen bringt es keine verbesserung und er nimmt 
-                                                        außer actual.Gyro nix an? actual.Accel und .CPass Werte liefern immer 0!?                                                        
+                                                        speichern und auslesen/setzen bringt es keine verbesserung und er nimmt
+                                                        außer actual.Gyro nix an? actual.Accel und .CPass Werte liefern immer 0!?
 
       ??? DEBUG SERIAL OUTPUT IS ON/OFF ???
 */
 
-// bool debug = true; // DEBUG SERIAL OUTPUT ON
+//bool debug = true; // DEBUG SERIAL OUTPUT ON
 bool debug = false;  // DEBUG SERIAL OUTPUT OFF
 
 //IMPORTANT on the old M5STACK CORE and Ardiono 1.8 (not 2.0): Boardmanager "espressif systems - eps32" -> version "2.0.17" (!)
@@ -65,7 +65,7 @@ bool holdPositonActive;
 
 // Invert X or Y or Z axis before output
 bool invertXAxis = true;
-bool invertYAxis = false;
+bool invertYAxis = true;
 bool invertZAxis = false;
 
 // Offsets für das Nullsetzen
@@ -122,6 +122,77 @@ bool ledState = false;
 const unsigned long LED_BLINK_INTERVAL_YELLOW = 1000;  // alle 1s blinken
 const unsigned long LED_BLINK_INTERVAL_BLUE = 4000;    // alle 4s blinken
 
+// Farben und Variablen für die Buttons
+#define COL_ACTIVE   TFT_CYAN   // Leuchtet wenn AN
+#define COL_INACTIVE 0x4208     // Dunkelgrau wenn AUS
+#define COL_TEXT     TFT_WHITE
+bool lockActive = false;
+bool slowActive = false;
+bool powerRequest = false;
+
+// Variablen für die Balkenvisualisierung
+double last_q1, last_q2, last_q3;
+int stableCounter = 0;
+const int STABLE_REQUIRED = 10;           // Wie viele gute Samples in Folge nötig sind
+const double DRIFT_THRESHOLD = 0.0001; // Rauschen-Grenzwert
+const double MAX_ERROR = 0.00125;          // Ab hier ist der Balken komplett grau und die Striche am Rand
+
+// DRIFT BAR VISUALIZATION ---
+void drawDriftIndicator(double q1b, double q2b, double q3b, int x, int y) {
+  // 1. Differenzen einzeln berechnen
+  double diffs[3] = {abs(q1b - last_q1), abs(q2b - last_q2), abs(q3b - last_q3)};
+  float factors[3];
+  double maxOverallDiff = 0;
+  for (int i = 0; i < 3; i++) {
+    factors[i] = constrain(diffs[i] / MAX_ERROR, 0.0, 1.0);
+    if (diffs[i] < DRIFT_THRESHOLD) factors[i] = 0;
+    if (diffs[i] > maxOverallDiff) maxOverallDiff = diffs[i];
+  }
+  // 2. Logik für den globalen Stabilitäts-Zähler (Alle 3 müssen unter Schwelle sein)
+  bool allStable = (maxOverallDiff < DRIFT_THRESHOLD);
+  if (allStable) {
+    if (stableCounter < STABLE_REQUIRED) stableCounter++;
+  } else {
+    stableCounter = 0;
+  }
+  // 3. Zeichnen der 3 Segmente
+  int secW = 106; // Breite pro Sektion
+  for (int i = 0; i < 3; i++) {
+    int secX = x + (i * 107); // 1px Lücke zwischen den Segmenten
+    float eF = factors[i];
+    // Farbe für dieses Segment berechnen
+    uint16_t barColor;
+    if (stableCounter >= STABLE_REQUIRED) {
+      barColor = GREEN; // Wenn alles fertig ist, leuchtet alles grün
+    } else {
+      uint8_t r = 5 * eF;                   // 100 war faktor von rot
+      uint8_t g = 80 + (155 * (0.75 - eF));  //1 statt 0.75
+      uint8_t b = 5 * eF;
+      barColor = M5.Lcd.color565(r, g, b);
+    }
+    // Hintergrund des Segments zeichnen
+    M5.Lcd.fillRect(secX, y, secW, 25, barColor);
+    int secCenter = secX + (secW / 2);
+    // Individuelle Strich-Anzeige pro Segment
+    if (diffs[i] < DRIFT_THRESHOLD) {
+      // Dieses Segment ist für sich stabil -> Goldener Strich
+      M5.Lcd.fillRect(secCenter - 3, y, 6, 25, 0xFEA0);
+    } else {
+      // Dieses Segment driftet noch -> Schwarze Striche
+      int offset = (int)(eF * (secW / 2 - 5));
+      M5.Lcd.fillRect(secCenter - offset - 1, y, 2, 25, TFT_BLACK);
+      M5.Lcd.fillRect(secCenter + offset, y, 2, 25, TFT_BLACK);
+    }
+  }
+  // 4. Globaler Fortschrittsbalken (nur wenn alle 3 ruhig sind, aber noch am Zählen)
+  if (allStable && stableCounter < STABLE_REQUIRED) {
+    int progressWidth = (stableCounter * 320) / STABLE_REQUIRED;
+    M5.Lcd.fillRect(x, y + 22, progressWidth, 3, WHITE);
+  }
+  // Werte für den nächsten Vergleich speichern
+  last_q1 = q1b; last_q2 = q2b; last_q3 = q3b;
+}
+
 // BATTERY ---
 void drawBattery() {
   if (!displayOn) return;
@@ -139,27 +210,83 @@ void drawBattery() {
   M5.Lcd.fillCircle(BATTERY_X + 71, 226, 8, color);  // grüner bis roter false der batteriespannungs
 }
 
+// DRAW BUTTONS ---
+void drawButtons() {
+  // 3 Spalten: C (0-106px), B (107-213px), A (214-320px)
+  int colWidth = 105;
+  int yLine = 3;   // Der Strich ganz oben am Rand
+  int hLine = 6;   // Dicke des Strichs
+  int yText = 15;  // Text-Starttiefe
+  M5.Lcd.setTextDatum(TC_DATUM); // Zentriert ausrichten
+  // Strich oben
+  M5.Lcd.fillRect(0, yLine, colWidth, hLine, lockActive ? COL_ACTIVE : COL_INACTIVE);
+  // Beschriftung
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.setTextColor(lockActive ? COL_ACTIVE : COL_TEXT, TFT_BLACK);
+  M5.Lcd.drawString("LOCK", 53, yText);
+  M5.Lcd.setTextSize(1);
+  M5.Lcd.drawString("RE-CENTER", 53, yText + 20);
+  M5.Lcd.drawString("LONG PRESS", 53, yText + 30);
+  // --- TASTE B: SLOW ---
+  M5.Lcd.fillRect(107, yLine, colWidth, hLine, slowActive ? COL_ACTIVE : COL_INACTIVE);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.setTextColor(slowActive ? COL_ACTIVE : COL_TEXT, TFT_BLACK);
+  M5.Lcd.drawString("SLOW", 160, yText);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.drawString("MODE", 160, yText + 21);
+  // --- TASTE A: POWER ---
+  M5.Lcd.fillRect(214, yLine, colWidth, hLine, powerRequest ? TFT_RED : COL_INACTIVE);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+  M5.Lcd.drawString("POWER", 267, yText);
+  M5.Lcd.setTextSize(1);
+  M5.Lcd.drawString("LONG PRESS", 267, yText + 20);
+    // Schöner Trennstrich von Hellblau zu Weiß und zurück
+  M5.Lcd.drawFastHLine(0, 57+0, 320, 0x0008); // Fast Schwarz
+  M5.Lcd.drawFastHLine(0, 57+1, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 57+2, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 57+3, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 57+4, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 57+5, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 57+6, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 57+7, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 57+8, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 57+9, 320, 0x0008); // Fast Schwarz
+}
+
 // REFRESH UI ---
 void refreshUI() {
   if (!displayOn) return;
   M5.Lcd.clear();
-  M5.Lcd.setTextSize(2);
-  M5.Lcd.setCursor(0, 0);
+    // Schöner Trennstrich von Hellblau zu Weiß und zurück
+  M5.Lcd.drawFastHLine(0, 97+0, 320, 0x0008); // Fast Schwarz
+  M5.Lcd.drawFastHLine(0, 97+1, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 97+2, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 97+3, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 97+4, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 97+5, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 97+6, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 97+7, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 97+8, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 97+9, 320, 0x0008); // Fast Schwarz
+  M5.Lcd.setTextSize(3);
+  M5.Lcd.setCursor(0, 72);
   M5.Lcd.setTextColor(TFT_ORANGE);
-  M5.Lcd.print("  M5STACK BLE HAT-GAMEPAD  ");
-  M5.Lcd.setCursor(0, 22);
-  M5.Lcd.println("  =======================  ");
-  M5.Lcd.setCursor(0, 45);
+  M5.Lcd.print("  M5 HAT-GAMEPAD  ");
+  M5.Lcd.setTextSize(2);
+//  M5.Lcd.setCursor(0, 95);
+//  M5.Lcd.println("  =======================  ");
+  M5.Lcd.setCursor(0, 115);
   M5.Lcd.setTextColor(BLUE);
   M5.Lcd.printf("   BLUETOOTH: ");
   M5.Lcd.setTextColor(bleGamepad.isConnected() ? GREEN : RED);
   M5.Lcd.printf("%s", bleGamepad.isConnected() ? "CONNECTED" : "WAITING...");
-  M5.Lcd.setCursor(0, 75);
-  M5.Lcd.setTextColor(precisionActive ? TFT_CYAN : WHITE);
-  M5.Lcd.printf("Slow Mode      [B]: %s", precisionActive ? "ON" : "OFF ");
-  M5.Lcd.setCursor(0, 105);
-  M5.Lcd.setTextColor(holdPositonActive ? YELLOW : WHITE);  // gelb bei aktiv, sonst weiß
-  M5.Lcd.printf("Hold Position  [C]: %s", holdPositonActive ? "HOLD " : "OFF");
+  //  M5.Lcd.setCursor(0, 75);
+  //  M5.Lcd.setTextColor(precisionActive ? TFT_CYAN : WHITE);
+  //  M5.Lcd.printf("Slow Mode      [B]: %s", precisionActive ? "ON" : "OFF ");
+  //  M5.Lcd.setCursor(0, 105);
+  //  M5.Lcd.setTextColor(holdPositonActive ? YELLOW : WHITE);  // gelb bei aktiv, sonst weiß
+  //  M5.Lcd.printf("Hold Position  [C]: %s", holdPositonActive ? "HOLD " : "OFF");
   //  M5.Lcd.setCursor(0, 135);
   //  M5.Lcd.setTextColor(tiltLockActive ? TFT_CYAN : WHITE);
   //  M5.Lcd.printf("Tilt-Lock Mode [C]: %s", tiltLockActive ? "ON " : "OFF");
@@ -167,20 +294,22 @@ void refreshUI() {
     M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
     M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
     M5.Lcd.setTextSize(2);
-    M5.Lcd.setTextColor(YELLOW, BLACK);
-    M5.Lcd.print("  => LOCKED <=");
+    M5.Lcd.setTextColor(RED, BLACK);
+    M5.Lcd.print("    => LOCKED <=");
   }
   if (!isWarmingUp) {
-    M5.Lcd.setCursor(0, 165);
+    M5.Lcd.fillRect(0, 159, 320, 28, BLACK);
+    M5.Lcd.setCursor(0, 170);
     M5.Lcd.setTextColor(WHITE);
-    M5.Lcd.printf("[C] long press = re-center");
+    M5.Lcd.print("    X        Y        Z");
   }
   if (isWarmingUp) {
-    M5.Lcd.fillRect(0, 160, 320, 40, BLUE);
-    M5.Lcd.setCursor(5, 173);
+    M5.Lcd.fillRect(0, 170, 320, 38, BLUE);
+    M5.Lcd.setCursor(5, 183);
     M5.Lcd.setTextColor(WHITE);
-    M5.Lcd.println(" * WAIT FOR CALIBRATION *");
+    M5.Lcd.print(" * WAIT FOR CALIBRATION *");
   }
+  drawButtons();
   drawBattery();
 }
 
@@ -201,7 +330,7 @@ void startCalibrationProcess() {
   prevBottomX = 99999;
   prevBottomY = 99999;
   prevBottomZ = 99999;
-  
+
   myICM.resetDMP();
   myICM.resetFIFO();
 
@@ -236,14 +365,16 @@ void setup() {
   esp_base_mac_addr_set(gamepad_mac_adr);
   //uint8_t mouse_mac_adr[] = {0x32, 0xFA, 0xA7, 0x01, 0x0E, 0x10};   //nutze versch. BT-MAC adressen
   //esp_base_mac_addr_set(mouse_mac_adr);
+
   Serial.begin(115200);
   M5.begin();
+  M5.Lcd.setRotation(3); // DISPLAY 180° gedreht
   M5.Power.begin();
   // M5 Setting Power:   see for details: https://github.com/m5stack/m5-docs/blob/master/docs/en/api/power.md
   if (!M5.Power.canControl()) M5.Lcd.printf("IP5306 is not i2c version\n");
   M5.Power.setPowerBtnEn(true);     //allow red power Button
   M5.Power.setPowerBoostSet(true);  //one press on red turns on/off device
-  M5.Power.setPowerVin(true);       //reset when usb calbe is plugged in
+  M5.Power.setPowerVin(false);      //reset when usb calbe is plugged in
 
   M5.lcd.setBrightness(lcd_brightn);
   if (debug) Serial.println("HID-GAMEPAD STARTED..");
@@ -376,6 +507,9 @@ void loop() {
 
   // Power Off Logik nach lange Button press, oder bt-nicht-connect-timeout
   if (M5.BtnA.pressedFor(2000) || (!bleGamepad.isConnected() && now - lastActivity > POWER_OFF_TIMEOUT)) {
+    powerRequest = !powerRequest;
+    M5.Lcd.fillRect(213, 0, 106, 6, TFT_WHITE); 
+    delay(100);
     LEDbar.setPixelColor(4, LEDbar.Color(255, 0, 0));  // Rot
     LEDbar.setPixelColor(5, LEDbar.Color(255, 0, 0));  // Rot
     LEDbar.setPixelColor(0, LEDbar.Color(255, 0, 0));  // Rot
@@ -390,12 +524,12 @@ void loop() {
     for (int i = lcd_brightn; i > 0; i--) {
       lcd_brightn -= 1;
       M5.lcd.setBrightness(lcd_brightn);
-      delay(20);
+      delay(35);
     }
     for (int i = led_brightness; i > 0; i--) {
       led_brightness -= 1;
       LEDbar.setBrightness(led_brightness);
-      delay(30);
+      delay(40);
       LEDbar.show();
     }
     LEDbar.setPixelColor(4, LEDbar.Color(0, 0, 0));  // Aus
@@ -411,7 +545,7 @@ void loop() {
     LEDbar.show();
     delay(100);
     M5.update();
-    M5.powerOFF();  //FAKE POWER-OFF, cunsumes still power until completely empty! but M5.Power.powerOFF uses 108% of ram in total when compiled :(
+    M5.Power.powerOFF();  //FAKE POWER-OFF, cunsumes still power until completely empty! but M5.Power.powerOFF uses 108% of ram in total when compiled :(
   }
 
   // Bluetooth connection LED Logik
@@ -484,7 +618,9 @@ void loop() {
     }
   } else {
     // 2. Button A/B/C + long & short press handling
-    if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
+    if (M5.BtnC.pressedFor(700) && !isWarmingUp) { // Visual Feedback: Kurzes Flackern des Strichs
+      M5.Lcd.fillRect(0, 0, 106, 6, TFT_WHITE);
+      delay(100);
       it_is_a_QuickReset = true;
       holdPositonActive = !holdPositonActive;  // toggelt holdPositonActive wenn lange re-calib gedrückt wurde weil selber button benutzt wird
       refreshUI();
@@ -493,10 +629,12 @@ void loop() {
         M5.update();
       }
     } else if (M5.BtnC.wasPressed()) {
+      lockActive = !lockActive; // Latching Toggle
       holdPositonActive = !holdPositonActive;
       lastActivity = now;
       refreshUI();
     } else if (M5.BtnB.wasPressed()) {
+      slowActive = !slowActive; // Latching Toggle
       precisionActive = !precisionActive;
       lastActivity = now;
       refreshUI();
@@ -560,6 +698,11 @@ void loop() {
       double q2 = ((double)data.Quat9.Data.Q2) / 1073741824.0;  // meine .setRY Achse Gamepad
       double q3 = ((double)data.Quat9.Data.Q3) / 1073741824.0;  // meine .setRX Achse Gamepad
       double q0 = sqrt(1.0 - ((q1 * q1) + (q2 * q2) + (q3 * q3)));
+
+      if (displayOn) {
+        if (now % 100 < 20) drawDriftIndicator(q3, q2, q1, 0, 140);;
+      }
+
       if (isWarmingUp) {
         if (now - calibrationTime >= WARM_UP_TIME) {  // "Wenn Daten kommen und Warm-Up abläuft dann .."
           //if (startupSamples < CALIBRATION_SAMPLES) {
@@ -619,7 +762,7 @@ void loop() {
             unsigned int debug_now = millis();
             if (debug_now % 250 < 20) {  // Nur alle 250ms ausgeben, (läuft mit display-on aber schneller)
               Serial.println("--- [LIVE] DMP-Werte ---");
-              Serial.printf("Live Quat9 | Q1:%1.5f | Q2:%1.5f | Q3:%1.5f\n", q1, q2, q3);
+              Serial.printf("Live Quat9 | Q1:%1.10f | Q2:%1.10f | Q3:%1.10f\n", q1, q2, q3);
               Serial.printf("calculated |  X:%3.3f |  Y:%3.3f |  Z:%3.3f (incl. offsets)\n\n", moveX_raw, moveY_raw, moveZ_raw);
             }
           }
@@ -656,8 +799,8 @@ void loop() {
               M5.Lcd.fillRect(BOTTOM_X, BOTTOM_Y, BOTTOM_W, BOTTOM_H, BLACK);
               M5.Lcd.setCursor(BOTTOM_X, BOTTOM_Y + 5);
               M5.Lcd.setTextSize(2);
-              M5.Lcd.setTextColor(YELLOW, BLACK);
-              M5.Lcd.print("  => LOCKED <=");
+              M5.Lcd.setTextColor(RED, BLACK);
+              M5.Lcd.print("    => LOCKED <=");
               prevBottomState = 1;
               prevBottomX = 0;
               prevBottomY = 0;
