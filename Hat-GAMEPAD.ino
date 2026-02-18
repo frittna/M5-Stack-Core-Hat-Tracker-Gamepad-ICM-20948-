@@ -11,8 +11,8 @@
   Gamepad is and feels more accurate and "directly".
 
   Sends 3 axis (RX,RY,RZ) Has a display: 320*240px, 10s screen-off-delay when BT-connected, 2x yellow/blue StatusLed with a NeoPixelBar
-  Menu-Buttons for: [B]=lock the current view, [C]=toggle Tilt-Lock, long-press[C]=re-center sensor
-  You can turn-off the device by long pressing [A] or with the integrated M5-PowerButton or whait 6min with BT-connection off.
+  Menu-Buttons for: [B]=lock the current view, long-press[C]=re-center sensor, by long pressing [A] you can turn-off the device but better
+  is it with the integrated M5-PowerButton, or just whait 6 min no BT-connection.
   The sensor technically takes up 5-30sek to warm-up and stop drifting, escpecially when its not facing a default position like vertical.
   Use (for example) OpenTrack and map the Joystick as Input and FreeTrack2.0/TrackIR as Output Protocoll for you SIM - depends on your setup.
 
@@ -50,7 +50,7 @@ const int16_t GAMEPAD_AXIS_MAX = 32767;
 const int16_t GAMEPAD_AXIS_CENTER = 16384;
 
 ICM_20948_I2C myICM;
-BleGamepad bleGamepad("M5STACK Hat-GAMEPAD", "Frittna", 100);
+BleGamepad bleGamepad("M5STACK HAT-GAMEPAD", "Frittna", 100);
 BleGamepadConfiguration bleGamepadConfig;
 Preferences prefs;
 
@@ -218,22 +218,20 @@ void drawButtons() {
   int hLine = 6;   // Dicke des Strichs
   int yText = 15;  // Text-Starttiefe
   M5.Lcd.setTextDatum(TC_DATUM); // Zentriert ausrichten
-  // Strich oben
-  M5.Lcd.fillRect(0, yLine, colWidth, hLine, lockActive ? COL_ACTIVE : COL_INACTIVE);
-  // Beschriftung
+  // --- TASTE C: RE-CENTER ---
+  M5.Lcd.fillRect(0, yLine, colWidth, hLine, it_is_a_QuickReset ? COL_ACTIVE : COL_INACTIVE);
   M5.Lcd.setTextSize(2);
-  M5.Lcd.setTextColor(lockActive ? COL_ACTIVE : COL_TEXT, TFT_BLACK);
-  M5.Lcd.drawString("LOCK", 53, yText);
+  M5.Lcd.setTextColor(it_is_a_QuickReset ? COL_ACTIVE : COL_TEXT, TFT_BLACK);
+  M5.Lcd.drawString("CENTER", 53, yText);
   M5.Lcd.setTextSize(1);
-  M5.Lcd.drawString("RE-CENTER", 53, yText + 20);
-  M5.Lcd.drawString("LONG PRESS", 53, yText + 30);
-  // --- TASTE B: SLOW ---
-  M5.Lcd.fillRect(107, yLine, colWidth, hLine, slowActive ? COL_ACTIVE : COL_INACTIVE);
+  M5.Lcd.drawString("POSITION", 53, yText + 20);
+  // --- TASTE B: LOCK ---
+  M5.Lcd.fillRect(107, yLine, colWidth, hLine, lockActive ? COL_ACTIVE : COL_INACTIVE);
   M5.Lcd.setTextSize(2);
   M5.Lcd.setTextColor(slowActive ? COL_ACTIVE : COL_TEXT, TFT_BLACK);
-  M5.Lcd.drawString("SLOW", 160, yText);
-  M5.Lcd.setTextSize(2);
-  M5.Lcd.drawString("MODE", 160, yText + 21);
+  M5.Lcd.drawString("LOCK", 160, yText);
+  M5.Lcd.setTextSize(1);
+  M5.Lcd.drawString("VIEW", 53, yText + 20);
   // --- TASTE A: POWER ---
   M5.Lcd.fillRect(214, yLine, colWidth, hLine, powerRequest ? TFT_RED : COL_INACTIVE);
   M5.Lcd.setTextSize(2);
@@ -241,41 +239,41 @@ void drawButtons() {
   M5.Lcd.drawString("POWER", 267, yText);
   M5.Lcd.setTextSize(1);
   M5.Lcd.drawString("LONG PRESS", 267, yText + 20);
-    // Schöner Trennstrich von Hellblau zu Weiß und zurück
-  M5.Lcd.drawFastHLine(0, 57+0, 320, 0x0008); // Fast Schwarz
-  M5.Lcd.drawFastHLine(0, 57+1, 320, 0x0010); // Dunkelblau
-  M5.Lcd.drawFastHLine(0, 57+2, 320, 0x0114); // Mittelblau
-  M5.Lcd.drawFastHLine(0, 57+3, 320, 0x0399); // Hellblau
-  M5.Lcd.drawFastHLine(0, 57+4, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
-  M5.Lcd.drawFastHLine(0, 57+5, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
-  M5.Lcd.drawFastHLine(0, 57+6, 320, 0x0399); // Hellblau
-  M5.Lcd.drawFastHLine(0, 57+7, 320, 0x0114); // Mittelblau
-  M5.Lcd.drawFastHLine(0, 57+8, 320, 0x0010); // Dunkelblau
-  M5.Lcd.drawFastHLine(0, 57+9, 320, 0x0008); // Fast Schwarz
+  // Schöner Trennstrich von Hellblau zu Weiß und zurück
+  M5.Lcd.drawFastHLine(0, 57 + 0, 320, 0x0008); // Fast Schwarz
+  M5.Lcd.drawFastHLine(0, 57 + 1, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 57 + 2, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 57 + 3, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 57 + 4, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 57 + 5, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 57 + 6, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 57 + 7, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 57 + 8, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 57 + 9, 320, 0x0008); // Fast Schwarz
 }
 
 // REFRESH UI ---
 void refreshUI() {
   if (!displayOn) return;
   M5.Lcd.clear();
-    // Schöner Trennstrich von Hellblau zu Weiß und zurück
-  M5.Lcd.drawFastHLine(0, 97+0, 320, 0x0008); // Fast Schwarz
-  M5.Lcd.drawFastHLine(0, 97+1, 320, 0x0010); // Dunkelblau
-  M5.Lcd.drawFastHLine(0, 97+2, 320, 0x0114); // Mittelblau
-  M5.Lcd.drawFastHLine(0, 97+3, 320, 0x0399); // Hellblau
-  M5.Lcd.drawFastHLine(0, 97+4, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
-  M5.Lcd.drawFastHLine(0, 97+5, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
-  M5.Lcd.drawFastHLine(0, 97+6, 320, 0x0399); // Hellblau
-  M5.Lcd.drawFastHLine(0, 97+7, 320, 0x0114); // Mittelblau
-  M5.Lcd.drawFastHLine(0, 97+8, 320, 0x0010); // Dunkelblau
-  M5.Lcd.drawFastHLine(0, 97+9, 320, 0x0008); // Fast Schwarz
+  // Schöner Trennstrich von Hellblau zu Weiß und zurück
+  M5.Lcd.drawFastHLine(0, 97 + 0, 320, 0x0008); // Fast Schwarz
+  M5.Lcd.drawFastHLine(0, 97 + 1, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 97 + 2, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 97 + 3, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 97 + 4, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 97 + 5, 320, 0xAD7F); // Nahezu Weiß (Glanzkante)
+  M5.Lcd.drawFastHLine(0, 97 + 6, 320, 0x0399); // Hellblau
+  M5.Lcd.drawFastHLine(0, 97 + 7, 320, 0x0114); // Mittelblau
+  M5.Lcd.drawFastHLine(0, 97 + 8, 320, 0x0010); // Dunkelblau
+  M5.Lcd.drawFastHLine(0, 97 + 9, 320, 0x0008); // Fast Schwarz
   M5.Lcd.setTextSize(3);
   M5.Lcd.setCursor(0, 72);
   M5.Lcd.setTextColor(TFT_ORANGE);
   M5.Lcd.print("  M5 HAT-GAMEPAD  ");
   M5.Lcd.setTextSize(2);
-//  M5.Lcd.setCursor(0, 95);
-//  M5.Lcd.println("  =======================  ");
+  //  M5.Lcd.setCursor(0, 95);
+  //  M5.Lcd.println("  =======================  ");
   M5.Lcd.setCursor(0, 115);
   M5.Lcd.setTextColor(BLUE);
   M5.Lcd.printf("   BLUETOOTH: ");
@@ -319,6 +317,7 @@ void startCalibrationProcess() {
   //startupSamples = 0;
   //driftOffsetY = 0;
   calibrationTime = it_is_a_QuickReset ? (millis() + WARM_UP_TIME - QUICK_RESET_TIME) : millis();
+  it_is_a_QuickReset = false; //resets flag
   icm_20948_DMP_data_t data;
   myICM.readDMPdataFromFIFO(&data);
   if ((data.header & DMP_header_bitmap_Quat9) > 0) {
@@ -508,7 +507,7 @@ void loop() {
   // Power Off Logik nach lange Button press, oder bt-nicht-connect-timeout
   if (M5.BtnA.pressedFor(2000) || (!bleGamepad.isConnected() && now - lastActivity > POWER_OFF_TIMEOUT)) {
     powerRequest = !powerRequest;
-    M5.Lcd.fillRect(213, 0, 106, 6, TFT_WHITE); 
+    M5.Lcd.fillRect(213, 0, 106, 6, TFT_WHITE);
     delay(100);
     LEDbar.setPixelColor(4, LEDbar.Color(255, 0, 0));  // Rot
     LEDbar.setPixelColor(5, LEDbar.Color(255, 0, 0));  // Rot
@@ -598,9 +597,9 @@ void loop() {
 
   // 1. Button-wake & Quick Reset logic
   if (!displayOn) {
-    if (M5.BtnC.pressedFor(700) && !isWarmingUp) {
+    if (M5.BtnC.pressedFor(100) && !isWarmingUp) {
       it_is_a_QuickReset = true;  //wird danach nie mehr zurückgesetzt! btw
-      holdPositonActive = !holdPositonActive;
+      //      holdPositonActive = !holdPositonActive;
       M5.Lcd.wakeup();
       M5.Lcd.setBrightness(lcd_brightn);
       displayOn = true;
@@ -618,27 +617,28 @@ void loop() {
     }
   } else {
     // 2. Button A/B/C + long & short press handling
-    if (M5.BtnC.pressedFor(700) && !isWarmingUp) { // Visual Feedback: Kurzes Flackern des Strichs
+    if (M5.BtnC.pressedFor(100) && !isWarmingUp) { // Visual Feedback: Kurzes Flackern des Strichs
       M5.Lcd.fillRect(0, 0, 106, 6, TFT_WHITE);
       delay(100);
       it_is_a_QuickReset = true;
-      holdPositonActive = !holdPositonActive;  // toggelt holdPositonActive wenn lange re-calib gedrückt wurde weil selber button benutzt wird
+      //    holdPositonActive = !holdPositonActive;  // toggelt holdPositonActive wenn lange re-calib gedrückt wurde weil selber button benutzt wird
       refreshUI();
       startCalibrationProcess();
       while (M5.BtnC.isPressed()) {
         M5.update();
       }
-    } else if (M5.BtnC.wasPressed()) {
+    } else if (M5.BtnB.wasPressed()) {
       lockActive = !lockActive; // Latching Toggle
       holdPositonActive = !holdPositonActive;
       lastActivity = now;
       refreshUI();
-    } else if (M5.BtnB.wasPressed()) {
-      slowActive = !slowActive; // Latching Toggle
-      precisionActive = !precisionActive;
-      lastActivity = now;
-      refreshUI();
     }
+    //    else if (M5.BtnB.wasPressed()) {
+    //      slowActive = !slowActive; // Latching Toggle
+    //      precisionActive = !precisionActive;
+    //      lastActivity = now;
+    //      refreshUI();
+    //    }
     //else if (M5.BtnA.wasPressed()) {
     //      tiltLockActive = !tiltLockActive;
     //      lastActivity = now;
