@@ -31,7 +31,7 @@ While a Mouse version exists too, this Gamepad version is significantly better b
 | :--- | :--- | :--- |
 | **[A]** | - | Power Off Device |
 | **[B]** | Lock the current view | - |
-| **[C]** | Toggle Tilt-Lock | Re-center Sensor |
+| **[C]** | Re-center Sensor | - |
 
 *   **Power Management:** 
     *   Integrated M5-PowerButton or long-press **Button [A]**.
@@ -120,6 +120,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 ---
 ---
 ---
+
 
 
 
