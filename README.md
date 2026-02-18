@@ -1,4 +1,4 @@
-![](jpg/Hat-GAMEPAD_logo.jpg)
+![](jpg/Hat-GAMEPAD_logo.jpg) ![](jpg/HAT-GAMEPAD-PREVIEW.jpg)
 
 # M5-Stack Core Basic - Bluetooth Hat-TRACKER-GAMEPAD (HAT-GAMEPAD)
 ### Featuring the ICM-20948 IMU Sensor with DMP support
@@ -116,6 +116,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 ---
 ---
 ---
+
 
 
 
