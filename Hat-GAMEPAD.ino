@@ -231,7 +231,7 @@ void drawButtons() {
   M5.Lcd.setTextColor(slowActive ? COL_ACTIVE : COL_TEXT, TFT_BLACK);
   M5.Lcd.drawString("LOCK", 160, yText);
   M5.Lcd.setTextSize(1);
-  M5.Lcd.drawString("VIEW", 53, yText + 20);
+  M5.Lcd.drawString("VIEW", 160, yText + 20);
   // --- TASTE A: POWER ---
   M5.Lcd.fillRect(214, yLine, colWidth, hLine, powerRequest ? TFT_RED : COL_INACTIVE);
   M5.Lcd.setTextSize(2);
