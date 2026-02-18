@@ -82,7 +82,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 *   **Sensor:** ICM-20948 (SparkFun breakout board)
     *   **Mode:** Quat9 (Gyro + Accel + Mag)
     *   **Output:** X and Y axis data
-*   **Display:** 320x240px LCD
+*   **Display:** 320x240px LCD (using display rotation 180°!)
 *   **Indicators:** 2x Yellow/Blue Status LEDs via a NeoPixel Bar
 
 ---
@@ -116,6 +116,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 ---
 ---
 ---
+
 
 
 
