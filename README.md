@@ -37,7 +37,7 @@ While a Mouse version exists too, this Gamepad version is significantly better b
     *   Integrated M5-PowerButton or long-press **Button [A]**.
     *   10s screen-off delay when BT is connected.
     *   Automatic shutdown after 6 minutes if BT connection is off.
-*   **Calibration:** The sensor requires **5–30 seconds** to warm up and stabilize. For best results, avoid starting while the sensor is not in a default position (like vertical).
+*   **Calibration:** The sensor requires **10–30 seconds** to warm up and stabilize. For best results, avoid starting while the sensor is not in a default position (like vertical) or make sure to re-center after drifting ends
 
 ---
 
@@ -99,7 +99,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
     *   Integrated M5-PowerButton.
     *   10s screen-off delay when BT is connected.
     *   Automatic shutdown after 6 minutes if BT connection is off.
-*   **Calibration:** The sensor requires **5–30 seconds** to warm up and stabilize. For best results, avoid starting while the sensor is not in a default position (like vertical).
+*   **Calibration:** The sensor requires **10–30 seconds** to warm up and stabilize. For best results, avoid starting while the sensor is not in a default position (like vertical) or make sure to re-center after drifting ends
 
 ---
 
@@ -116,6 +116,7 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 ---
 ---
 ---
+
 
 
 
