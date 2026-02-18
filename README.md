@@ -115,11 +115,10 @@ A simple wireless **Hat-Tracker-Device (MOUSE version)** using **Bluetooth Low E
 *   **   Then select your Board: Menu->Tools->Board-> **"ESP32 Arduino" -> "M5-Stack-Core-ESP32"**
 *   **   Use the old version of SDMenu-Loader library **0.5.2** - to Boot onto other APPS on your SD hold A on boot to load the SD-Menu Loader (put all reqired files onto the SD)
 
-<sup>ToDo's: At the Moment no storing of gyro bias values is made for the next boot because the DMP is doing it's thing correctly but is just not accepting nor will he tell me its Accel and CPass values so that i can store them. maybe i will add it later.</sup> 
+---
+---
+---
 
----
----
----
 
 
 
